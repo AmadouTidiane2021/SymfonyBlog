@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}SymfonyBlog!
+{% endblock %}
+
+{% block body %}
+	<h1 class="display-3">Liste des Bulletins</h1>
+
+	{% if bulletins is defined %}
+		{% for bulletin in bulletins %}
+			<div class="alert alert-info">
+				<h3 class="display-4">
+					<a href="{{ path('bulletin_display', {'bulletinId' : bulletin.id}) }}">
+						{{ bulletin.title }}
+					</a>
+				</h3>
+
+				<p class="h2">{{ bulletin.category|capitalize }}</p>
+				<p>{{ bulletin.content }}</p>
+				<p class="lead">Date de publication: Le
+					{{ bulletin.creationDate|date('d/m/Y \à G:i:s', 'Europe/Paris') }}</p>
+				{# jour/mois/année à heure(24)/minute/seconde #}
+			</div>
+		{% endfor %}
+	{% endif %}
+
+
+{% endblock %}
