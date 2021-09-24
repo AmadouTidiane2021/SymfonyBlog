@@ -8,15 +8,28 @@
 			</button>
 			<div class="collapse navbar-collapse" id="navbarCollapse">
 				<ul class="navbar-nav me-auto mb-2 mb-md-0">
-					<li class="nav-item">
-<a class="nav-link active" aria-current="page" href="{{ path('index_cheatsheet') }}">Cheatsheet</a>
-
+					<li
+						class="nav-item">
+						{# Condition structurant le comportement de notre template #}
+						{% if cheatsheet is defined %}
+							<a class="nav-link disabled" aria-current="page" href="{{ path('index_cheatsheet') }}">Cheatsheet</a>
+						{% else %}
+							<a class="nav-link active" href="{{ path('index_cheatsheet') }}">Cheatsheet</a>
+						{% endif %}
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="#">Link</a>
+						{% if (formName is defined) and (formName == "Création de Bulletin") %}
+							<a class="nav-link disabled" aria-current="page" href="{{ path('bulletin_create') }}">Bulletin</a>
+						{% else %}
+							<a class="nav-link active" href="{{ path('bulletin_create') }}">Bulletin</a>
+						{% endif %}
 					</li>
 					<li class="nav-item">
-						<a class="nav-link disabled">Disabled</a>
+						{% if (formName is defined) and (formName == "Création de Tag") %}
+							<a class="nav-link disabled" aria-current="page" href="{{ path('tag_create') }}">Tag</a>
+						{% else %}
+							<a class="nav-link active" href="{{ path('tag_create') }}">Tag</a>
+						{% endif %}
 					</li>
 				</ul>
 				<form class="d-flex">
@@ -27,4 +40,3 @@
 		</div>
 	</nav>
 </header>
-

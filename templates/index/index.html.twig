@@ -4,25 +4,43 @@
 {% endblock %}
 
 {% block body %}
+	
 	<h1 class="display-3">Liste des Bulletins</h1>
-
-	{% if bulletins is defined %}
-		{% for bulletin in bulletins %}
-			<div class="alert alert-info">
-				<h3 class="display-4">
-					<a href="{{ path('bulletin_display', {'bulletinId' : bulletin.id}) }}">
-						{{ bulletin.title }}
-					</a>
-				</h3>
-
-				<p class="h2">{{ bulletin.category|capitalize }}</p>
-				<p>{{ bulletin.content }}</p>
-				<p class="lead">Date de publication: Le
-					{{ bulletin.creationDate|date('d/m/Y \à G:i:s', 'Europe/Paris') }}</p>
-				{# jour/mois/année à heure(24)/minute/seconde #}
-			</div>
-		{% endfor %}
+	{% if bulletinForm is defined %}
+		<a class="btn btn-info" role="button" href="{{ path('bulletin_autopersist') }}">Générer Bulletin</a>
+		<div class="alert alert-success" style="margin-top: 10px;">
+			<h2 class="h2">Création d'un nouveau bulletin</h2>
+			{{ form(bulletinForm) }}
+		</div>
 	{% endif %}
 
 
+	{% if bulletins is defined %}
+		{% for bulletin in bulletins %}
+			<div class="alert alert-{{ bulletin.getStatus() }}">
+				<h3 class="display-4">
+					<a href={{path('bulletin_display',{'bulletinId': bulletin.id} )}}>
+						{{ bulletin.title}}</a>
+				</h3>
+
+				<p class="h2"><a href="{{ path('index_category', {'categoryName' : bulletin.category})}}"> 
+				{{bulletin.category|capitalize}}</a></p>
+				<p>{{ bulletin.content|nl2br }}</p>
+				<p>{{ bulletin.content}}</p>
+				<p class="lead">Date de publication: Le
+					{{ bulletin.creationDate|date('d/m/Y  \à G:i:s', 'Europe/Paris') }}</p>
+					{# jour/mois/année à heure(24)/minute/seconde #}
+
+				<a href="{{ path('bulletin_update',{'bulletinId': bulletin.id}) }}" class="btn btn-warning"
+				 role="button">Modifier</a>
+
+
+				<a href="{{ path('bulletin_delete',{'bulletinId': bulletin.id}) }}" class="btn btn-danger" 
+				role="button">Supprimer</a>
+
+
+			</div>
+		{% endfor %}
+	{% endif %}
 {% endblock %}
+

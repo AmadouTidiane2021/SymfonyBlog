@@ -43,6 +43,26 @@ class Bulletin
         $this->creationDate = new \DateTime('now'); //La date de création sera toujours initialisée à l'instant de l'appel du constructeur. On n'a plus besoin du setCreationDate()
     }
 
+    // public functin __toString()
+    // {
+    //   return title . ' . ' . $this -> content; // Rend une chaine de caractere lorsqu'on demande
+    //   //d'afficher l'objet
+    // }
+
+    public function getStatus(): string {
+
+        switch($this -> category) {
+        case "general":
+            return "info";
+        case "divers":
+            return "warning";
+        case "urgent":
+            return "danger";
+        default:
+            return "secondary";
+        }
+       
+    }
 
     public function getId(): ?int
     {
