@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\BulletinRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -37,10 +39,17 @@ class Bulletin
      */
     private $creationDate;
 
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Tag", inversedBy="bulletins")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $tags;
+
     public function __construct()
     {
         //Cette méthode est automatiquement lancée à la création d'un nouvel objet
         $this->creationDate = new \DateTime('now'); //La date de création sera toujours initialisée à l'instant de l'appel du constructeur. On n'a plus besoin du setCreationDate()
+        $this->tags = new ArrayCollection();
     }
 
     // public functin __toString()
@@ -113,6 +122,30 @@ class Bulletin
     public function setCreationDate(\DateTimeInterface $creationDate): self
     {
         $this->creationDate = $creationDate;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Tag[]
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags[] = $tag;
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        $this->tags->removeElement($tag);
 
         return $this;
     }

@@ -29,6 +29,20 @@
 				<p>{{ bulletin.content}}</p>
 				<p class="lead">Date de publication: Le
 					{{ bulletin.creationDate|date('d/m/Y  \à G:i:s', 'Europe/Paris') }}</p>
+					<p>
+						Tags:
+			
+							{% if bulletin.tags is empty %}
+							Aucun
+							{% else %}
+								{% for tag in bulletin.tags %}
+								<a href="{{ path('index_tag', {'tagName' : tag.name}) }}" style="color:gray;">
+									#{{ tag.name }}
+								</a>
+								{% endfor %}
+							{% endif %}
+			
+					</p>
 					{# jour/mois/année à heure(24)/minute/seconde #}
 
 				<a href="{{ path('bulletin_update',{'bulletinId': bulletin.id}) }}" class="btn btn-warning"

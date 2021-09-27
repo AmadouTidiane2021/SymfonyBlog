@@ -13,6 +13,9 @@
 			rel="stylesheet" href="{{ asset('assets/css/sticky-footer-navbar.css') }}">
 			{#{{ encore_entry_link_tags('app') }}#}
 			<style>
+				a {
+					text-decoration: none;
+				}
 				.bd-placeholder-img {
 					font-size: 1.125rem;
 					text-anchor: middle;
@@ -35,21 +38,23 @@
 		{% endblock %}
 	</head>
 
-	<body class="d-flex flex-column h-100">
+	<body
+		class="d-flex flex-column h-100">
+		{# Inclusion de header.html.twig #}
+		{% include 'layout/header.html.twig' %}
 
-    {# Inclusion de header.html.twig #}
-    {% include "layout/header.html.twig" %}
-		
 		<!-- Begin page content -->
 		<main class="flex-shrink-0">
-			<div class="container"> 
-                {% block body %}{% endblock %}
+			<div class="container">
+				{% for message in app.session.flashbag.get('info') %}
+					<div class="alert alert-{{ app.session.get('status') }}">
+						<p class="lead" style="margin:auto">{{ message }}</p>
+					</div>
+				{% endfor %}
+				{% block body %}{% endblock %}
 			</div>
 		</main>
-        
-        {# Inclusion de footer.html.twig #}
-        {% include 'layout/footer.html.twig' %}
-		</body>
-	</html>
 
-    
+		{% include 'layout/footer.html.twig' %}
+	</body>
+</html>

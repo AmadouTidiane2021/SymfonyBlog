@@ -52,7 +52,7 @@ class IndexController extends AbstractController
         $entityManager = $this->getDoctrine()->getManager();
         $bulletinRepository = $entityManager->getRepository(Bulletin::class);
         //Nous récupérons les Bulletin dont la catégorie correspond à la valeur passée en paramètre de route
-        $bulletins = $bulletinRepository->findByCategory($categoryName); //findBy rend un TABLEAU
+        $bulletins = $bulletinRepository->findBy(['category' => ($categoryName)]); //findBy rend un TABLEAU
         //Version alternative -> findBy(['category' => ($categoryName)])
         //Si le tableau est vide, nous retournons à l'index
         if (!$bulletins || !$categoryName) { //Si $bulletins OU $categoryName est vide
@@ -60,6 +60,30 @@ class IndexController extends AbstractController
         }
         //Si nous obtenons un résultat à partir de notre recherche, nous le renvoyons à notre twig
         $bulletins = array_reverse($bulletins); //On inverse l'ordre des bulletins
+        return $this->render('index/index.html.twig', [
+            'bulletins' => $bulletins,
+        ]);
+    }
+
+    /**
+     * @Route("/tag/display/{tagName}", name="index_tag")
+     */
+    public function indexTag(string $tagName): Response
+    {
+        //Cette fonction affiche la liste des Bulletins possédant un Tag donné, dont le nom est indiqué dans notre paramètre de route
+        //Nous récupérons l'Entity Manager et le Repository pertinent (TagRepository)
+        $entityManager = $this->getDoctrine()->getManager();
+        $tagRepository = $entityManager->getRepository(Tag::class);
+        //Nous opérons une recherche selon l'attribut $name de la classe Tag, en utilisant comme référence la valeur $tagName passée via notre paramètre de route
+        $tag = $tagRepository->findOneBy(['name' => $tagName]);
+        //Si le tag recherché n'existe pas, nous revenons à l'index
+        if (!$tag) {
+            return $this->redirect($this->generateUrl('index'));
+        }
+        //Nous récupérons la liste de nos bulletins au sein d'une variable
+        $bulletins = $tag->getBulletins();
+        $bulletins = array_reverse($bulletins->toArray()); //On convertit $bulletins de ArrayCollection en simple tableau avec toArray(), avant d'en renverser l'ordre avec array_reverse()
+        //Nous retournons cette liste de bulletins à index.html.twig
         return $this->render('index/index.html.twig', [
             'bulletins' => $bulletins,
         ]);
@@ -102,6 +126,7 @@ class IndexController extends AbstractController
         //Cette fonction crée un Tag selon les informations entrées par l'Utilisateur via formulaire
         //Nous faisons appel à l'Entity Manager afin de communiquer avec notre BDD
         $entityManager = $this->getDoctrine()->getManager();
+        $tagRepository = $entityManager->getRepository(Tag::class); //Pour rechercher si name déjà existant
         //Nous créons un nouvel objet Tag que nous lions à notre formulaire
         $tag = new Tag;
         $tagForm = $this->createForm(TagType::class, $tag);
@@ -109,8 +134,16 @@ class IndexController extends AbstractController
         $tagForm->handleRequest($request);
         if ($request->isMethod('post') && $tagForm->isValid()) {
             //Si notre requête client a été validée via un formulaire POST et que ce formulaire est valide
-            $entityManager->persist($tag); //Tag est déjà rempli via handleRequest()
-            $entityManager->flush();
+            $duplicataTag = $tagRepository->findBy(['name' => $tag->getName()]); //Nous vérifions dans la base de données s'il existe déjà un Tag à l'attribut $name identique à celui du Tag que nous voulons persister
+            if (!$duplicataTag) { //Si le tableau de duplicata est vide, nous pouvons persister $tag
+                $request->getSession()->getFlashBag()->add('info', 'Tag créé avec succès');
+                $request->getSession()->set('status', 'success');
+                $entityManager->persist($tag); //Tag est déjà rempli via handleRequest()
+                $entityManager->flush();
+            } else {
+                $request->getSession()->getFlashBag()->add('info', 'Un tag avec ce nom existe déjà');
+                $request->getSession()->set('status', 'danger');
+            }
             return $this->redirect($this->generateUrl('index'));
         }
         //Nous affichons le formulaire
@@ -203,12 +236,14 @@ class IndexController extends AbstractController
     /**
      * @Route("/bulletin/autopersist", name="bulletin_autopersist")
      */
-    public function autopersistBulletin(): Response
+    public function autopersistBulletin(Request $request): Response
     {
         //Cette fonction doit générer un Bulletin automatiquement et le faire persister dans la base de données
         // 1. Récupérer les outils nécessaires (Entity Manager)
         $entityManager = $this->getDoctrine()->getManager();
+        $tagRepository = $entityManager->getRepository(Tag::class); //LIEN TAG
         // 2. Créer notre objet Bulletin et le Renseigner
+        $tag = $tagRepository->findOneBy(['name' => 'généré']); //LIEN TAG
         $lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec posuere diam vitae pharetra faucibus. Fusce eget arcu orci. Etiam venenatis lorem eget feugiat commodo. Fusce felis dolor, aliquam in felis at, congue pulvinar justo. Curabitur fringilla dolor nec consequat porttitor. Proin consequat leo vitae nisl laoreet, pretium varius justo consectetur.";
         $categories = ['general', 'divers', 'urgent']; //catégories possibles
         //Création du Bulletin après avoir prédéterminé les valeurs possibles de content et category
@@ -216,9 +251,13 @@ class IndexController extends AbstractController
         $bulletin->setTitle('Bulletin Généré #' . rand(0, 999));
         $bulletin->setCategory($categories[rand(0, (count($categories) - 1))]); //Choix aléatoire entre un des éléments du tableau $categories
         $bulletin->setContent($lorem);
+        $bulletin->addTag($tag); //LIEN TAG
         // 3. Faire persister notre Bulletin
         $entityManager->persist($bulletin); //DEMANDE de persistance de l'objet $bulletin
         $entityManager->flush(); //Applique toutes les requêtes envoyées au Manager
+        // 3.5 Création d'un flashbag confirmant la création de notre bulletin
+        $request->getSession()->getFlashBag()->add('info', 'Bulletin généré avec succès');
+        $request->getSession()->set('status', 'success');
         // 4. Rediriger vers index()
         return $this->redirect($this->generateUrl('index'));
     }
